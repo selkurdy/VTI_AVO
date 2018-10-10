@@ -185,7 +185,7 @@ def getcommandline():
         help='Epsilon S of upper and lower layer. dfv=%5.2f  %5.2f' % (epsilons1,epsilons2))
     parser.add_argument('--delta',type=float, nargs=2,default=[delta1,delta2],
         help='Delta Delta of upper and lower layer. dfv=%5.2f  %5.2f' % (delta1,delta2))
-    parser.add_argument('--model',choices=['iso','vti','vva_delta','vva_epes'],default='iso',
+    parser.add_argument('--model',choices=['iso','vti','vva_delta','vva_epsilon'],default='iso',
         help='modeling options:isotropic,anisotropic VTI, Phase velocities with angle epsilon, delta,\
         Phase velocities with angle epsilonP epsilonS -> delta is calculated .dfv= iso')
     parser.add_argument('--hideplot',action='store_true',default=False,
@@ -197,80 +197,18 @@ def getcommandline():
 def main():
     """Main program."""
     cmdl = getcommandline()
-    pdfcl = f'{cmdl.model}' + '_avo.pdf'
-    pdfcl1 = f'{cmdl.model}' + '_asavo.pdf'
+    pdfiso0 = f'{cmdl.model}' + '_isoavo.pdf'
+    pdfiso1 = f'{cmdl.model}' + '_igavo.pdf'
+    pdfaniso0 = f'{cmdl.model}' + '_anavo.pdf'
+    pdfaniso1 = f'{cmdl.model}' + '_anigavo.pdf'
+    pdfvve = f'{cmdl.model}' + '_vveps_avo.pdf'
+    pdfvvd = f'{cmdl.model}' + '_vvd_avo.pdf'
 
     anglearray = np.linspace(cmdl.angles[0],cmdl.angles[1],30,endpoint=True)
     anglearraysqr = np.power(np.sin(np.deg2rad(anglearray)),2)
     # print(anglearraysqr.size,anglearray.size)
-    if cmdl.model == 'vva_delta':
-        vp1ang = vapp_delta(cmdl.vp[0],cmdl.epsilonp[0],cmdl.delta[0],anglearray)
-        vp2ang = vapp_delta(cmdl.vp[1],cmdl.epsilonp[1],cmdl.delta[1],anglearray)
-        vs1ang = vasv_delta(cmdl.vp[0],cmdl.vs[0],cmdl.epsilons[0],cmdl.delta[0],anglearray)
-        vs2ang = vasv_delta(cmdl.vp[1],cmdl.vs[1],cmdl.epsilons[1],cmdl.delta[1],anglearray)
 
-        plt.figure(1)
-        plt.subplot(2,1,1)
-        plt.plot(anglearray,vp1ang,'b',label='Vp1',lw=3)
-        plt.plot(anglearray,vp2ang,'g',label='Vp2',lw=3)
-        plt.xlabel('Angle of Incidence')
-        plt.title('P Phase Velocity vs Angle')
-        plt.legend(loc='center right')
-        plt.annotate('Vp1:%6.0f Vs1:%6.0f d1: %3.2f' % (cmdl.vp[0],cmdl.vs[0],cmdl.delta[0]),
-            xy=(anglearray[5],vp1ang[20]),xytext=(0.3,0.70),textcoords='figure fraction')
-        plt.annotate('Vp2:%6.0f Vs2:%6.0f  d2:%3.2f' % (cmdl.vp[1],cmdl.vs[1],cmdl.delta[1]),
-            xy=(anglearray[5],vp1ang[20]),xytext=(0.3,0.67),textcoords='figure fraction')
-        plt.ylabel('Phase P Velocity')
-        plt.subplot(2,1,2)
-        plt.plot(anglearray,vs1ang,'r',label='Vs1',lw=3)
-        plt.plot(anglearray,vs2ang,'m',label='Vs2',lw=3)
-        plt.xlabel('Angle of Incidence')
-        plt.ylabel('Phase SV Velocity')
-        plt.legend(loc='center right')
-        plt.title('SV Phase Velocity vs Angle')
-        plt.annotate('Vp1:%6.0f Vs1:%6.0f d1: %3.2f' % (cmdl.vp[0],cmdl.vs[0],cmdl.delta[0]),
-            xy=(anglearray[5],vs1ang[20]),xytext=(0.3,0.30),textcoords='figure fraction')
-        plt.annotate('Vp2:%6.0f Vs2:%6.0f  d2:%3.2f' % (cmdl.vp[1],cmdl.vs[1],cmdl.delta[1]),
-            xy=(anglearray[5],vs1ang[20]),xytext=(0.3,0.27),textcoords='figure fraction')
-        plt.savefig(pdfcl)
-        if not cmdl.hideplot:
-            plt.show()
-
-    if cmdl.model == 'vva_epes':
-        # equation taken from Seismic Data Processing, Springer Upaday
-        vp1ang = vapp(cmdl.vp[0],cmdl.vs[0],cmdl.epsilonp[0],cmdl.epsilons[0],anglearray)
-        vp2ang = vapp(cmdl.vp[1],cmdl.vs[1],cmdl.epsilonp[1],cmdl.epsilons[1],anglearray)
-        vs1ang = vasv(cmdl.vs[0],cmdl.epsilons[0],anglearray)
-        vs2ang = vasv(cmdl.vs[1],cmdl.epsilons[1],anglearray)
-
-        plt.figure(1)
-        plt.subplot(2,1,1)
-        plt.plot(anglearray,vp1ang,'b',label='Vp1',lw=3)
-        plt.plot(anglearray,vp2ang,'g',label='Vp2',lw=3)
-        plt.xlabel('Angle of Incidence')
-        plt.title('P Phase Velocity vs Angle')
-        plt.legend(loc='center right')
-        plt.annotate('Vp1:%6.0f Vs1:%6.0f d1: %3.2f' % (cmdl.vp[0],cmdl.vs[0],cmdl.delta[0]),
-            xy=(anglearray[5],vp1ang[20]),xytext=(0.3,0.70),textcoords='figure fraction')
-        plt.annotate('Vp2:%6.0f Vs2:%6.0f  d2:%3.2f' % (cmdl.vp[1],cmdl.vs[1],cmdl.delta[1]),
-            xy=(anglearray[5],vp1ang[20]),xytext=(0.3,0.67),textcoords='figure fraction')
-        plt.ylabel('Phase P Velocity')
-        plt.subplot(2,1,2)
-        plt.plot(anglearray,vs1ang,'r',label='Vs1',lw=3)
-        plt.plot(anglearray,vs2ang,'m',label='Vs2',lw=3)
-        plt.xlabel('Angle of Incidence')
-        plt.ylabel('Phase SV Velocity')
-        plt.legend(loc='center right')
-        plt.title('SV Phase Velocity vs Angle')
-        plt.annotate('Vp1:%6.0f Vs1:%6.0f d1: %3.2f' % (cmdl.vp[0],cmdl.vs[0],cmdl.delta[0]),
-            xy=(anglearray[5],vs1ang[20]),xytext=(0.3,0.30),textcoords='figure fraction')
-        plt.annotate('Vp2:%6.0f Vs2:%6.0f  d2:%3.2f' % (cmdl.vp[1],cmdl.vs[1],cmdl.delta[1]),
-            xy=(anglearray[5],vs1ang[20]),xytext=(0.3,0.27),textcoords='figure fraction')
-        plt.savefig(pdfcl)
-        if not cmdl.hideplot:
-            plt.show()
-
-    elif cmdl.model == 'iso':
+    if cmdl.model == 'iso':
         ripp = Ripp(cmdl.vp[0],cmdl.vp[1],cmdl.vs[0],cmdl.vs[1],cmdl.rb[0],cmdl.rb[1],anglearray)
         list_ri(anglearray,ripp)
         plt.plot(anglearray,ripp,lw=3,label='ISO')
@@ -281,8 +219,9 @@ def main():
             xy=(anglearray[5],ripp[20]),xytext=(0.5,0.75),textcoords='figure fraction')
         plt.ylabel('Reflection Amplitude')
         plt.xlabel('Incidence Angle in degrees')
-        plt.legend(loc='lower center')
-        plt.savefig(pdfcl)
+        plt.legend(loc='lower left')
+        # plt.legend(loc='lower center')
+        plt.savefig(pdfiso0)
         if not cmdl.hideplot:
             plt.show()
         plt.plot(anglearraysqr,ripp,lw=3)
@@ -296,39 +235,124 @@ def main():
         xi = np.linspace(anglearraysqr.min(),anglearraysqr.max())
         acf = np.polyfit(anglearraysqr,ripp,1)
         ampii = np.polyval(acf,xi)
-        plt.plot(xi,ampii,c='r',lw=3,label='I/G')
+        plt.plot(xi,ampii,c='r',lw=2,label='I_G')
         plt.annotate('Intercept:%6.3f Gradient:%6.3f ' % (acf[1],acf[0]),
             xy=(anglearraysqr[5],ripp[20]),xytext=(0.5,0.68),textcoords='figure fraction')
-        plt.legend(loc='lower center')
-        plt.savefig(pdfcl1)
+        plt.legend(loc='lower left')
+        # plt.legend(loc='lower center')
+        plt.savefig(pdfiso1)
         if not cmdl.hideplot:
             plt.show()
 
-    else:
+    if cmdl.model == 'vva_delta':
+        vp1ang = vapp_delta(cmdl.vp[0],cmdl.epsilonp[0],cmdl.delta[0],anglearray)
+        vp2ang = vapp_delta(cmdl.vp[1],cmdl.epsilonp[1],cmdl.delta[1],anglearray)
+        vs1ang = vasv_delta(cmdl.vp[0],cmdl.vs[0],cmdl.epsilons[0],cmdl.delta[0],anglearray)
+        vs2ang = vasv_delta(cmdl.vp[1],cmdl.vs[1],cmdl.epsilons[1],cmdl.delta[1],anglearray)
+
+        plt.figure(1,figsize=(7,7))
+        plt.subplot(2,1,1)
+        plt.plot(anglearray,vp1ang,'b',label='Vp1',lw=3)
+        plt.plot(anglearray,vp2ang,'g',label='Vp2',lw=3)
+        plt.xlabel('Angle of Incidence')
+        plt.title('P Phase Velocity vs Angle')
+        plt.legend(loc='center right')
+        plt.annotate('Vp1:%6.0f Vs1:%6.0f epsp1:%3.2f epss1:%3.2f d1:%3.2f' %
+            (cmdl.vp[0],cmdl.vs[0],cmdl.epsilonp[0],cmdl.epsilons[0],cmdl.delta[0]),
+            xy=(anglearray[5],vp1ang[20]),xytext=(0.3,0.70),textcoords='figure fraction')
+        plt.annotate('Vp2:%6.0f Vs2:%6.0f epsp2:%3.2f epss2:%3.2f d2:%3.2f' %
+            (cmdl.vp[1],cmdl.vs[1],cmdl.epsilonp[1],cmdl.epsilons[1],cmdl.delta[1]),
+            xy=(anglearray[5],vp1ang[20]),xytext=(0.3,0.67),textcoords='figure fraction')
+        plt.ylabel('Phase P Velocity')
+        plt.subplot(2,1,2)
+        plt.plot(anglearray,vs1ang,'r',label='Vs1',lw=3)
+        plt.plot(anglearray,vs2ang,'m',label='Vs2',lw=3)
+        plt.xlabel('Angle of Incidence')
+        plt.ylabel('Phase SV Velocity')
+        plt.legend(loc='center right')
+        plt.title('SV Phase Velocity vs Angle')
+        plt.annotate('Vp1:%6.0f Vs1:%6.0f epsp1:%3.2f epss1:%3.2f d1: %3.2f' %
+            (cmdl.vp[0],cmdl.vs[0],cmdl.epsilonp[0],cmdl.epsilons[0],cmdl.delta[0]),
+            xy=(anglearray[5],vs1ang[20]),xytext=(0.3,0.30),textcoords='figure fraction')
+        plt.annotate('Vp2:%6.0f Vs2:%6.0f epsp2:%3.2f epss2:%3.2f d2:%3.2f' %
+            (cmdl.vp[1],cmdl.vs[1],cmdl.epsilonp[1],cmdl.epsilons[1],cmdl.delta[1]),
+            xy=(anglearray[5],vs1ang[20]),xytext=(0.3,0.27),textcoords='figure fraction')
+        plt.tight_layout()
+        plt.savefig(pdfvvd)
+        if not cmdl.hideplot:
+            plt.show()
+
+    if cmdl.model == 'vva_epsilon':
+        # equation taken from Seismic Data Processing, Springer Upaday
+        vp1ang = vapp(cmdl.vp[0],cmdl.vs[0],cmdl.epsilonp[0],cmdl.epsilons[0],anglearray)
+        vp2ang = vapp(cmdl.vp[1],cmdl.vs[1],cmdl.epsilonp[1],cmdl.epsilons[1],anglearray)
+        vs1ang = vasv(cmdl.vs[0],cmdl.epsilons[0],anglearray)
+        vs2ang = vasv(cmdl.vs[1],cmdl.epsilons[1],anglearray)
+
+        plt.figure(1,figsize=(7,7))
+        # plt.figure(1)
+        plt.subplot(2,1,1)
+        # plt.tight_layout()
+        plt.plot(anglearray,vp1ang,'b',label='Vp1',lw=3)
+        plt.plot(anglearray,vp2ang,'g',label='Vp2',lw=3)
+        plt.xlabel('Angle of Incidence')
+        plt.title('P Phase Velocity vs Angle')
+        plt.legend(loc='center right')
+        plt.annotate('Vp1:%6.0f Vs1:%6.0f epsp1: %3.2f, epss1: %3.2f' % (cmdl.vp[0],cmdl.vs[0],cmdl.epsilonp[0],cmdl.epsilons[0]),
+            xy=(anglearray[5],vp1ang[20]),xytext=(0.3,0.70),textcoords='figure fraction')
+        plt.annotate('Vp2:%6.0f Vs2:%6.0f  epsp2:%3.2f  epss2:%3.2f' % (cmdl.vp[1],cmdl.vs[1],cmdl.epsilonp[1],cmdl.epsilons[1]),
+            xy=(anglearray[5],vp1ang[20]),xytext=(0.3,0.67),textcoords='figure fraction')
+        plt.ylabel('Phase P Velocity')
+        plt.subplot(2,1,2)
+        plt.plot(anglearray,vs1ang,'r',label='Vs1',lw=3)
+        plt.plot(anglearray,vs2ang,'m',label='Vs2',lw=3)
+        plt.xlabel('Angle of Incidence')
+        plt.ylabel('Phase SV Velocity')
+        plt.legend(loc='center right')
+        plt.title('SV Phase Velocity vs Angle')
+        plt.annotate('Vp1:%6.0f Vs1:%6.0f epsp1: %3.2f epss1:%3.2f' %
+            (cmdl.vp[0],cmdl.vs[0],cmdl.epsilonp[0],cmdl.epsilons[0]),
+            xy=(anglearray[5],vs1ang[20]),xytext=(0.3,0.30),textcoords='figure fraction')
+        plt.annotate('Vp2:%6.0f Vs2:%6.0f  epsp2:%3.2f epss2:%3.2f' %
+            (cmdl.vp[1],cmdl.vs[1],cmdl.epsilonp[1],cmdl.epsilons[1]),
+            xy=(anglearray[5],vs1ang[20]),xytext=(0.3,0.27),textcoords='figure fraction')
+        plt.tight_layout()
+        plt.savefig(pdfvve)
+        if not cmdl.hideplot:
+            plt.show()
+
+
+    if cmdl.model != 'iso':
         ripp,rapp = Rapp(cmdl.vp[0],cmdl.vp[1],cmdl.vs[0],cmdl.vs[1],cmdl.rb[0],cmdl.rb[1],
             cmdl.delta[0],cmdl.delta[1],anglearray)
 
         list_ra(anglearray,rapp,ripp)
         plt.plot(anglearray,rapp,'b',label='VTI',lw=3)
         plt.plot(anglearray,ripp,'g',label= 'ISO',lw=3)
-        plt.legend(loc='lower center')
+        plt.legend(loc='lower left')
+        # plt.legend(loc='lower center')
         plt.title('VTI AVO')
-        plt.annotate('Vp1:%6.0f Vs1:%6.0f Rb1:%3.2f d1: %3.2f' % (cmdl.vp[0],cmdl.vs[0],cmdl.rb[0],cmdl.delta[0]),
+        plt.annotate('Vp1:%6.0f Vs1:%6.0f Rb1:%3.2f d1: %3.2f' %
+            (cmdl.vp[0],cmdl.vs[0],cmdl.rb[0],cmdl.delta[0]),
             xy=(anglearray[5],ripp[20]),xytext=(0.3,0.70),textcoords='figure fraction')
-        plt.annotate('Vp2:%6.0f Vs2:%6.0f Rb2:%3.2f d2:%3.2f' % (cmdl.vp[1],cmdl.vs[1],cmdl.rb[1],cmdl.delta[1]),
+        plt.annotate('Vp2:%6.0f Vs2:%6.0f Rb2:%3.2f d2:%3.2f' %
+            (cmdl.vp[1],cmdl.vs[1],cmdl.rb[1],cmdl.delta[1]),
             xy=(anglearray[5],ripp[20]),xytext=(0.3,0.67),textcoords='figure fraction')
         plt.ylabel('Reflection Amplitude')
-        plt.xlabel('Incidence Angle in radians squared')
-        plt.savefig(pdfcl)
+        plt.xlabel('Incidence Angle in degrees')
+        plt.savefig(pdfaniso0)
         if not cmdl.hideplot:
             plt.show()
         plt.plot(anglearraysqr,rapp,'b',label='VTI',lw=3)
         plt.plot(anglearraysqr,ripp,'g',label= 'ISO',lw=3)
-        plt.legend(loc='lower center')
+        # plt.legend(loc='lower center')
+        plt.legend(loc='lower left')
         plt.title('VTI AVO')
-        plt.annotate('Vp1:%6.0f Vs1:%6.0f Rb1:%3.2f d1: %3.2f' % (cmdl.vp[0],cmdl.vs[0],cmdl.rb[0],cmdl.delta[0]),
+        plt.annotate('Vp1:%6.0f Vs1:%6.0f Rb1:%3.2f d1: %3.2f' %
+            (cmdl.vp[0],cmdl.vs[0],cmdl.rb[0],cmdl.delta[0]),
             xy=(anglearraysqr[5],rapp[20]),xytext=(0.3,0.70),textcoords='figure fraction')
-        plt.annotate('Vp2:%6.0f Vs2:%6.0f Rb2:%3.2f d2:%3.2f' % (cmdl.vp[1],cmdl.vs[1],cmdl.rb[1],cmdl.delta[1]),
+        plt.annotate('Vp2:%6.0f Vs2:%6.0f Rb2:%3.2f d2:%3.2f' %
+            (cmdl.vp[1],cmdl.vs[1],cmdl.rb[1],cmdl.delta[1]),
             xy=(anglearraysqr[5],rapp[20]),xytext=(0.3,0.67),textcoords='figure fraction')
         plt.ylabel('Reflection Amplitude')
         plt.xlabel('Incidence Angle in radians squared')
@@ -338,14 +362,15 @@ def main():
         ampii = np.polyval(acfi,xi)
         acfa = np.polyfit(anglearraysqr,rapp,1)
         ampia = np.polyval(acfa,xi)
-        plt.plot(xi,ampii,c='r',lw=3,label='I/G ISO')
-        plt.plot(xi,ampia,c='m',lw=3,label='I/G VTI')
+        plt.plot(xi,ampii,c='r',lw=2,label='I_G ISO')
+        plt.plot(xi,ampia,c='m',lw=2,label='I_G VTI')
         plt.annotate('ISO Intercept:%6.3f Gradient:%6.3f ' % (acfi[1],acfi[0]),
             xy=(anglearraysqr[5],rapp[20]),xytext=(0.4,0.5),textcoords='figure fraction')
         plt.annotate('VTI Intercept:%6.3f Gradient:%6.3f ' % (acfa[1],acfa[0]),
             xy=(anglearraysqr[5],rapp[20]),xytext=(0.4,0.47),textcoords='figure fraction')
-        plt.legend(loc='lower center')
-        plt.savefig(pdfcl1)
+        plt.legend(loc='lower left')
+        # plt.legend(loc='lower center')
+        plt.savefig(pdfaniso1)
         if not cmdl.hideplot:
             plt.show()
 
